@@ -46,18 +46,19 @@ $ docker-compose run --rm -e DATABASES=<database to be created from the backup> 
 ## Configuration
 
 Configuration options can be passed as environment variables.
-|Variable   |Purpose   |Default   |
-|---|---|---|
-|`ODOO_HOST`   |Odoo container hostname   |`odoo`   |
-|`ODOO_PORT`   |Odoo container port   |`8069`   |
-|`ODOO_MASTER_PASSWORD`   |Odoo master password   |`admin`   |
-|`ODOO_VERSION`|Odoo version number (8, 9 or 10) | `10` |
-|`DATABASES`   |A single database or comma-separated list of databases   |   |
-|`AWS_ACCESS_KEY_ID`   |Amazon AWS Access Key ID   |   |
-|`AWS_SECRET_ACCESS_KEY`   |Amazon AWS Secret Access Key   |   |
-|`AWS_REGION`   |The default AWS region   |`eu-central-1`   |
-|`S3_BUCKET`   |Amazon AWS S3 bucket name   |   |
-|`S3_PATH`   |The backup path inside the bucket, a.k.a. prefix   |`backup`   |
-|`RESTORE_FILENAME`   |Which backup file to restore. Only used when restoring backup.  If empty, the latest backup will be restored |   |
-|`SCHEDULE`   |Backup frequency. `single` = backup only once. See all available options [here](http://godoc.org/github.com/robfig/cron#hdr-Predefined_schedules).  |`single`   |
-|`CHECK_URL`   |A URL to call after a successful backup   |   |
+
+| Variable                | Purpose                   |Default   |
+| ----------------------- | ------------------------- | -------- |
+| `ODOO_HOST`             | Odoo container hostname   | `odoo`   |
+| `ODOO_PORT`             | Odoo container port       | `8069`   |
+| `ODOO_MASTER_PASSWORD`  | Odoo master password      | `admin`  |
+| `ODOO_VERSION`          | Odoo version number (8, 9 or 10) | `10` |
+| `DATABASES`             | A single database or comma-separated list of databases   |   |
+| `AWS_ACCESS_KEY_ID`     | Amazon AWS Access Key ID  |          |
+| `AWS_SECRET_ACCESS_KEY` | Amazon AWS Secret Access Key |       |
+| `AWS_REGION`            | The default AWS region       |`eu-central-1`   |
+| `S3_BUCKET`             | Amazon AWS S3 bucket name    |  |
+| `S3_PATH`               | The backup path inside the bucket, a.k.a. prefix   |`backup`   |
+| `RESTORE_FILENAME`      | Which backup file to restore. Only used when restoring backup.  If empty, the latest backup will be restored |   |
+| `SCHEDULE`              | Backup frequency. `single` = backup only once. See all available options [here](http://godoc.org/github.com/robfig/cron#hdr-Predefined_schedules).  |`single`   |
+| `CHECK_URL`             | A URL to call after a successful backup   |   |
