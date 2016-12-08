@@ -35,7 +35,7 @@ dictConfig(logging_config)
 _logger = logging.getLogger()
 
 
-def backup(databases, odoo_host, odoo_port, odoo_master_password,
+def backup(databases, odoo_host, odoo_port, odoo_master_password, odoo_version,
            aws_access_key_id, aws_secret_access_key, aws_region, s3_bucket,
            s3_path, **kwargs):
     databases_to_backup = databases.split(',')
@@ -64,7 +64,11 @@ def backup(databases, odoo_host, odoo_port, odoo_master_password,
                                       time.strftime('%Y-%m-%d_%H-%M-%S'))
 
         # Download the backup dump from Odoo
-        data = conn.dump(odoo_master_password, database, 'zip')
+        if odoo_version == '8':
+            data = conn.dump(odoo_master_password, database)
+        else:  # 9 and 10
+            data = conn.dump(odoo_master_password, database, 'zip')
+
         data = base64.b64decode(data)
 
         _logger.info(u"Successfully dumped database '{}'. Uploading to S3 ..."
@@ -157,6 +161,7 @@ if __name__ == "__main__":
     parser.add_argument('--odoo-port', default=env['ODOO_PORT'])
     parser.add_argument('--odoo-master-password',
                         default=env['ODOO_MASTER_PASSWORD'])
+    parser.add_argument('--odoo-version', default=env['ODOO_VERSION'])
     parser.add_argument('--aws-access-key-id',
                         default=env['AWS_ACCESS_KEY_ID'])
     parser.add_argument('--aws-secret-access-key',
@@ -168,6 +173,12 @@ if __name__ == "__main__":
     parser.add_argument('--restore-filename', default=env['RESTORE_FILENAME'])
     parser.add_argument('mode', default='backup')
     args = parser.parse_args()
+
+    supported_versions = ['8', '9', '10']
+    if args.odoo_version not in supported_versions:
+        _logger.error('Invalid Odoo version {}. Supported versions: {}'
+                      .format(args['odoo_version'], supported_versions))
+        sys.exit(1)
 
     if args.mode == 'restore':
         restore(**vars(args))
