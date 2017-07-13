@@ -259,19 +259,16 @@ if __name__ == "__main__":
     env = os.environ
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--databases', required=True, default=env.get('DATABASES'), type=lambda s: s.split(','))
+    parser.add_argument('--databases', default=env.get('DATABASES'), type=lambda s: s.split(','))
     parser.add_argument('--odoo-host', default=env.get('ODOO_HOST', 'localhost'))
     parser.add_argument('--odoo-port', default=env.get('ODOO_PORT', 8069))
-    parser.add_argument('--odoo-master-password', required=True,
-                        default=env.get('ODOO_MASTER_PASSWORD'))
-    parser.add_argument('--odoo-version', required=True, default=env.get('ODOO_VERSION'))
-    parser.add_argument('--aws-access-key-id', required=True,
-                        default=env.get('AWS_ACCESS_KEY_ID'))
-    parser.add_argument('--aws-secret-access-key', required=True,
-                        default=env.get('AWS_SECRET_ACCESS_KEY'))
-    parser.add_argument('--aws-region', required=True, default=env.get('AWS_REGION'))
-    parser.add_argument('--s3-bucket', required=True, default=env.get('S3_BUCKET'))
-    parser.add_argument('--s3-path', required=True, default=env.get('S3_PATH'))
+    parser.add_argument('--odoo-master-password', default=env.get('ODOO_MASTER_PASSWORD'))
+    parser.add_argument('--odoo-version', default=env.get('ODOO_VERSION'))
+    parser.add_argument('--aws-access-key-id', default=env.get('AWS_ACCESS_KEY_ID'))
+    parser.add_argument('--aws-secret-access-key', default=env.get('AWS_SECRET_ACCESS_KEY'))
+    parser.add_argument('--aws-region', default=env.get('AWS_REGION'))
+    parser.add_argument('--s3-bucket', default=env.get('S3_BUCKET'))
+    parser.add_argument('--s3-path', default=env.get('S3_PATH'))
     parser.add_argument('--check-url', default=env.get('CHECK_URL'))
     parser.add_argument('--restore-filename', default=env.get('RESTORE_FILENAME'))
     parser.add_argument('--protocol', default=env.get('PROTOCOL', 'xmlrpc'), choices=('xmlprc', 'http'))
