@@ -62,3 +62,4 @@ Configuration options can be passed as environment variables.
 | `RESTORE_FILENAME`      | Which backup file to restore. Only used when restoring backup.  If empty, the latest backup will be restored |   |
 | `SCHEDULE`              | Backup frequency. `single` = backup only once. See all available options [here](http://godoc.org/github.com/robfig/cron#hdr-Predefined_schedules).  |`single`   |
 | `CHECK_URL`             | A URL to call after a successful backup   |   |
+| `PROTOCOL`              | The protocol to use (`xmlrpc`, `http`). HTTP is more memory-efficient but also somewhat hackier. | `xmlrpc` |
