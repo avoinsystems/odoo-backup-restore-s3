@@ -178,6 +178,7 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
            aws_access_key_id, aws_secret_access_key, aws_region, s3_bucket,
            s3_path, restore_filename, **kwargs):
     import requests
+    import tempfile
     assert len(databases) == 1, 'You can only restore one database ' \
                                           'at once'
     database = databases[0]
@@ -207,19 +208,29 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
     restore_key = check_and_fix_restore_key(bucket, database, restore_key, s3_bucket, s3_path)
 
     _logger.info('Downloading {} from S3 ...'.format(restore_key))
-    file = BytesIO()
-    bucket.download_fileobj(restore_key, file)
 
-    # Stream the file to Odoo
-    response = requests.post(
-        base_url + 'restore',
-        stream=True,
-        data=file
-    )
+    with tempfile.TemporaryFile() as file:
+        bucket.download_fileobj(restore_key, file)
+        file.seek(0)
 
-    if response.status_code >= 400:
-        raise Exception("There was an error restoring the database to Odoo.\n{}".format(response.text))
-    # data = base64.encodebytes(file.getvalue()).decode('utf-8')
+        _logger.info('Successfully downloaded {} from S3. Restoring dump '
+                 'to database {}'.format(restore_key,
+                                         database))
+
+        # Post the file to Odoo
+        response = requests.post(
+            base_url + 'restore',
+            files=dict(backup_file=('s3_db.zip', file, 'application/zip')),
+            data=dict(master_pwd=odoo_master_password, name=database),
+        )
+
+    # Ugly af, I know.
+    if response.status_code >= 400 or 'Database restore error:' in response.text:
+        if 'Database restore error:' in response.text:
+            text = response.text.split("Database restore error:", 1)[1].split("\n", 1)[0]
+        else:
+            text = response.text
+        raise Exception("There was an error restoring the database to Odoo.\n{}".format(text))
 
     _logger.info(u"Successfully restored {} to database '{}'."
                  .format(restore_key, database))
