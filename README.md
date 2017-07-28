@@ -1,5 +1,7 @@
 # odoo-backup-restore-s3
-Author: Miku Laitinen / [Avoin.Systems](https://avoin.systems)
+Authors: 
+ - Miku Laitinen / [Avoin.Systems](https://avoin.systems)
+ - Atte Isopuro / [Avoin.Systems](https://avoin.systems)
 
 Backup Odoo databases (with filestore) to S3 and restore them upon request. Supported Odoo versions: 8, 9, 10.
 [![Docker Repository on Quay](https://quay.io/repository/avoinsystems/odoo-backup-restore-s3/status "Docker Repository on Quay")](https://quay.io/repository/avoinsystems/odoo-backup-restore-s3)
