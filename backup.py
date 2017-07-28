@@ -189,11 +189,10 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
     base_url = 'http://{}:{}/web/database/'.format(odoo_host, odoo_port)
 
     # Get the database list
-    # TODO: this returns a 400-error page, should be a json-rpc response. The body needs to be an empty object, that might be the problem
     response = requests.post(
         base_url + 'list',
         headers={'content-type': 'application/json'},
-        data={}
+        data='{}'
     )
 
     db_list = response.json()['result']
