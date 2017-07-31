@@ -4,7 +4,7 @@ import base64
 from datetime import datetime
 from xmlrpc import client
 
-import argparse
+import configargparse
 import os
 import sys
 import time
@@ -267,32 +267,29 @@ actions['restore_http'] = restore_http
 if __name__ == "__main__":
 
     env = os.environ
+    supported_versions = ('8', '9', '10')
 
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--databases', default=env.get('DATABASES'), type=lambda s: s.split(','))
-    parser.add_argument('--odoo-host', default=env.get('ODOO_HOST', 'localhost'))
-    parser.add_argument('--odoo-port', default=env.get('ODOO_PORT', 8069))
-    parser.add_argument('--odoo-master-password', default=env.get('ODOO_MASTER_PASSWORD'))
-    parser.add_argument('--odoo-version', default=env.get('ODOO_VERSION'))
-    parser.add_argument('--aws-access-key-id', default=env.get('AWS_ACCESS_KEY_ID'))
-    parser.add_argument('--aws-secret-access-key', default=env.get('AWS_SECRET_ACCESS_KEY'))
-    parser.add_argument('--aws-region', default=env.get('AWS_REGION'))
-    parser.add_argument('--s3-bucket', default=env.get('S3_BUCKET'))
-    parser.add_argument('--s3-path', default=env.get('S3_PATH'))
-    parser.add_argument('--check-url', default=env.get('CHECK_URL'))
-    parser.add_argument('--restore-filename', default=env.get('RESTORE_FILENAME'))
-    parser.add_argument('--protocol', default=env.get('PROTOCOL', 'xmlrpc'), choices=('xmlprc', 'http'))
+    parser = configargparse.ArgParser()
     parser.add_argument('mode', default='backup', choices=('backup', 'restore'))
+    parser.add_argument('-c', '--config', is_config_file=True, help='Path to configuration file. Either .ini or .yaml syntax accepted')
+    parser.add_argument('--databases', env_var='DATABASES', required=True, type=lambda s: s.split(','))
+    parser.add_argument('--odoo-host', env_var='ODOO_HOST', default='odoo')
+    parser.add_argument('--odoo-port', env_var='ODOO_PORT', default=8069)
+    parser.add_argument('--odoo-master-password', env_var='ODOO_MASTER_PASSWORD', default='admin')
+    parser.add_argument('--odoo-version', env_var='ODOO_VERSION', default=supported_versions[-1], choices=supported_versions)
+    parser.add_argument('--aws-access-key-id', env_var='AWS_ACCESS_KEY_ID', required=True)
+    parser.add_argument('--aws-secret-access-key', env_var='AWS_SECRET_ACCESS_KEY', required=True)
+    parser.add_argument('--aws-region', env_var='AWS_REGION', required=True)
+    parser.add_argument('--s3-bucket', env_var='S3_BUCKET', required=True)
+    parser.add_argument('--s3-path', env_var='S3_PATH', default='backup')
+    parser.add_argument('--check-url', env_var='CHECK_URL', help="After every backup, send an HTTP GET request to this address. Designed with healthchecks.io in mind.")
+    parser.add_argument('--restore-filename', env_var='RESTORE_FILENAME')
+    parser.add_argument('--protocol', env_var='PROTOCOL', default='xmlrpc', choices=('xmlprc', 'http'))
 
     args = parser.parse_args()
 
-    supported_versions = ['8', '9', '10']
-    if args.odoo_version not in supported_versions:
-        _logger.error('Invalid Odoo version {}. Supported versions: {}'
-                      .format(args['odoo_version'], supported_versions))
-        sys.exit(1)
-
     main(vars(args))
+
     if args.check_url:
         import requests
 

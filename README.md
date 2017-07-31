@@ -58,10 +58,10 @@ Configuration options can be passed as environment variables.
 | `DATABASES`             | A single database or comma-separated list of databases   |   |
 | `AWS_ACCESS_KEY_ID`     | Amazon AWS Access Key ID  |          |
 | `AWS_SECRET_ACCESS_KEY` | Amazon AWS Secret Access Key |       |
-| `AWS_REGION`            | The default AWS region       |`eu-central-1`   |
+| `AWS_REGION`            | The default AWS region       |  |
 | `S3_BUCKET`             | Amazon AWS S3 bucket name    |  |
 | `S3_PATH`               | The backup path inside the bucket, a.k.a. prefix   |`backup`   |
 | `RESTORE_FILENAME`      | Which backup file to restore. Only used when restoring backup.  If empty, the latest backup will be restored |   |
 | `SCHEDULE`              | Backup frequency. `single` = backup only once. See all available options [here](http://godoc.org/github.com/robfig/cron#hdr-Predefined_schedules).  |`single`   |
-| `CHECK_URL`             | A URL to call after a successful backup   |   |
-| `PROTOCOL`              | The protocol to use (`xmlrpc`, `http`). HTTP is more memory-efficient but also somewhat hackier. | `xmlrpc` |
+| `CHECK_URL`             | A URL to call with a GET request after a successful backup   |   |
+| `PROTOCOL`              | The protocol to use (`xmlrpc`, `http`). HTTP is more memory-efficient. | `xmlrpc` |
