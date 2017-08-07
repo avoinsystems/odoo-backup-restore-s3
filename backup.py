@@ -37,7 +37,6 @@ _logger = logging.getLogger()
 actions = dict()
 
 def main(args):
-    _logger.info(args)
     # Create the AWS S3 connection
     aws_conn = Session(
         args['aws_access_key_id'],
