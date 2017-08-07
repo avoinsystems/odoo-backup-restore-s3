@@ -237,8 +237,7 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
 
 def check_and_fix_restore_key(bucket, database, restore_key, s3_bucket, s3_path):
     backup_files = bucket.objects.filter(Prefix=s3_path)
-    backup_filenames = [file.key for file in backup_files]
-    if restore_key and restore_key not in backup_filenames:
+    if restore_key and all(restore_key != file.key for file in backup_files):
         raise FileNotFoundError(
             'Backup file {} not found in S3 bucket {}.'
                 .format(restore_key, s3_bucket))
