@@ -189,13 +189,19 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
     base_url = 'http://{}:{}/web/database/'.format(odoo_host, odoo_port)
 
     # Get the database list
-    response = requests.post(
-        base_url + 'list',
-        headers={'content-type': 'application/json'},
-        data='{}'
-    )
-
-    db_list = response.json()['result']
+    if kwargs.get('odoo_version') in ('8', '9'):
+        # Only 10+ supports getting dblist via HTTP
+        conn = client.ServerProxy(
+            'http://{odoo_host}:{odoo_port}/xmlrpc/db'.format(odoo_host=odoo_host, odoo_port=odoo_port)
+        )
+        db_list = conn.list()
+    else:
+        response = requests.post(
+            base_url + 'list',
+            headers={'content-type': 'application/json'},
+            data='{}'
+        )
+        db_list = response.json()['result']
 
     if database in db_list:
         raise Exception(
