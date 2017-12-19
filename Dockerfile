@@ -2,7 +2,7 @@ FROM python:3.5.2-alpine
 MAINTAINER Miku Laitinen <miku@avoin.systems>
 
 RUN apk update \
-    && apk add python py-pip \
+    && apk add python py-pip bash \
     && pip install boto3 requests ConfigArgParse \
     && apk add curl \
     && curl -L --insecure https://github.com/odise/go-cron/releases/download/v0.0.6/go-cron-linux.gz | zcat > /usr/local/bin/go-cron \
@@ -33,6 +33,7 @@ ENV CHECK_URL ''
 
 COPY run.sh /run.sh
 COPY backup.py /backup.py
+COPY wait-for-it.sh /wait-for-it.sh
 
 ENTRYPOINT ["/run.sh"]
 CMD ["backup"]
