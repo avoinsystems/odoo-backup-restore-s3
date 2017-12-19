@@ -145,10 +145,10 @@ actions['backup_http'] = backup_http
 def restore_xmlrpc(conn, s3, databases, odoo_host, odoo_port, odoo_master_password,
            aws_access_key_id, aws_secret_access_key, aws_region, s3_bucket,
            s3_path, restore_filename, **kwargs):
-
-    assert len(databases) == 1, 'You can only restore one database ' \
-                                          'at once'
-    database = databases[0]
+    if databases:
+        assert len(databases) == 1, 'You can only restore one database ' \
+                                              'at once'
+        database = databases[0]
 
     # Add path to restore filename
     restore_key = s3_path + '/' + restore_filename \
@@ -156,15 +156,16 @@ def restore_xmlrpc(conn, s3, databases, odoo_host, odoo_port, odoo_master_passwo
 
     # Get the database list
     db_list = conn.list()
+    bucket = s3.Bucket(s3_bucket)
+    restore_key = check_and_fix_restore_key(bucket, database, restore_key, s3_bucket, s3_path)
+
+    if not database:
+        database = guess_database_from_restore_key(restore_key)
 
     if database in db_list:
         raise Exception(
             "Unable to perform restore. "
             "Database '{}' already exists.".format(database))
-
-    # Get a list of the backup files in the path
-    bucket = s3.Bucket(s3_bucket)
-    restore_key = check_and_fix_restore_key(bucket, database, restore_key, s3_bucket, s3_path)
 
     # Download the backup from S3
     _logger.info('Downloading {} from S3 ...'.format(restore_key))
@@ -190,9 +191,10 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
            s3_path, restore_filename, odoo_version, **kwargs):
     import requests
     import tempfile
-    assert len(databases) == 1, 'You can only restore one database ' \
-                                          'at once'
-    database = databases[0]
+    if databases:
+        assert len(databases) == 1, 'You can only restore one database ' \
+                                              'at once'
+        database = databases[0]
 
     # Add path to restore filename
     restore_key = s3_path + '/' + restore_filename \
@@ -215,14 +217,17 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
         )
         db_list = response.json()['result']
 
+    # Get a list of the backup files in the path
+    bucket = s3.Bucket(s3_bucket)
+    restore_key = check_and_fix_restore_key(bucket, database, restore_key, s3_bucket, s3_path)
+
+    if not database:
+        database = guess_database_from_restore_key(restore_key)
+
     if database in db_list:
         raise Exception(
             "Unable to perform restore. "
             "Database '{}' already exists.".format(database))
-
-    # Get a list of the backup files in the path
-    bucket = s3.Bucket(s3_bucket)
-    restore_key = check_and_fix_restore_key(bucket, database, restore_key, s3_bucket, s3_path)
 
     _logger.info('Downloading {} from S3 ...'.format(restore_key))
 
@@ -285,13 +290,24 @@ def check_and_fix_restore_key(bucket, database, restore_key, s3_bucket, s3_path)
                 latest = iter_file.last_modified
                 restore_key = iter_file.key
 
-        if database not in restore_key:
+        if database and database not in restore_key:
             _logger.warning("Latest dump key is {} but it doesn't "
                             "contain the database name '{}'."
                             .format(restore_key, database))
 
     return restore_key
 
+def guess_database_from_restore_key(restore_key):
+    # path/database_2017-08-07_13-05-43.zip
+    # If key is a path, the filename is the last level
+    path_parts = restore_key.split('/')
+    restore_key = path_parts[-1]
+    trim = 0
+    if restore_key.endswith('.zip') or restore_key.endswith('.sql'):
+        trim = 4
+    elif restore_key.endswith('.dump'):
+        trim = 5
+    return restore_key[0:len(restore_key) - trim]
 
 actions['restore_http'] = restore_http
 
@@ -320,6 +336,10 @@ if __name__ == "__main__":
     parser.add_argument('--protocol', env_var='PROTOCOL', default='xmlrpc', choices=('xmlprc', 'http'))
 
     args = parser.parse_args()
+
+    if not args.databases:
+        if args.mode == 'backup':
+            raise ValueError("--databases is required when in backup mode")
 
     main(vars(args))
 
