@@ -72,7 +72,7 @@ def backup_xmlrpc(s3, conn, databases, odoo_host, odoo_port, odoo_master_passwor
         # Download the backup dump from Odoo
         if odoo_version == '8':
             data = conn.dump(odoo_master_password, database)
-        else:  # 9 and 10
+        else:  # >= 9
             data = conn.dump(odoo_master_password, database, 'zip')
 
         data = base64.b64decode(data)
@@ -316,7 +316,7 @@ actions['restore_http'] = restore_http
 if __name__ == "__main__":
 
     env = os.environ
-    supported_versions = ('8', '9', '10')
+    supported_versions = ('8', '9', '10', '11')
 
     parser = configargparse.ArgParser()
     parser.add_argument('mode', default='backup', choices=('backup', 'restore'))
