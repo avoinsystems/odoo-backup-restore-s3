@@ -96,10 +96,22 @@ def backup_http(s3, databases, odoo_host, odoo_port, odoo_master_password, odoo_
 
     # Iterate through the databases to backup
     backup_url = "http://{}:{}/web/database/backup".format(odoo_host, odoo_port)
-    request_data = dict(
-        master_pwd=odoo_master_password,
-        backup_format='zip'
-    )
+
+    if odoo_version == '8':
+        pwd_field = 'backup_pwd'
+        db_field = 'backup_db'
+    else:
+        pwd_field = 'master_pwd'
+        db_field = 'name'
+
+    request_data = {
+        pwd_field: odoo_master_password,
+        'backup_format': 'zip'
+    }
+
+    if odoo_version == '8':
+        request_data['token'] = 'dummy'
+
     request_args = dict(
         url=backup_url,
         stream=True,
@@ -108,7 +120,7 @@ def backup_http(s3, databases, odoo_host, odoo_port, odoo_master_password, odoo_
     for database in databases:
         filename = "{}_{}.zip".format(database,
                                       time.strftime('%Y-%m-%d_%H-%M-%S'))
-        request_data['name'] = database
+        request_data[db_field] = database
         # Download the backup dump from Odoo
         response = requests.post(**request_args)
 
@@ -175,7 +187,7 @@ actions['restore_xmlrpc'] = restore_xmlrpc
 
 def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
            aws_access_key_id, aws_secret_access_key, aws_region, s3_bucket,
-           s3_path, restore_filename, **kwargs):
+           s3_path, restore_filename, odoo_version, **kwargs):
     import requests
     import tempfile
     assert len(databases) == 1, 'You can only restore one database ' \
@@ -189,7 +201,7 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
     base_url = 'http://{}:{}/web/database/'.format(odoo_host, odoo_port)
 
     # Get the database list
-    if kwargs.get('odoo_version') in ('8', '9'):
+    if odoo_version in ('8', '9'):
         # Only 10+ supports getting dblist via HTTP
         conn = client.ServerProxy(
             'http://{odoo_host}:{odoo_port}/xmlrpc/db'.format(odoo_host=odoo_host, odoo_port=odoo_port)
@@ -223,10 +235,27 @@ def restore_http(s3, databases, odoo_host, odoo_port, odoo_master_password,
                                          database))
 
         # Post the file to Odoo
+        if odoo_version == '8':
+            pwd_field = 'restore_pwd'
+            db_field = 'new_db'
+            file_field = 'db_file'
+        else:
+            pwd_field = 'master_pwd'
+            db_field = 'name'
+            file_field = 'backup_file'
+
+        data = {
+            pwd_field: odoo_master_password,
+            db_field: database
+        }
+
+        if odoo_version == '8':
+            data['mode'] = 'restore'
+
         response = requests.post(
             base_url + 'restore',
-            files=dict(backup_file=('s3_db.zip', file, 'application/zip')),
-            data=dict(master_pwd=odoo_master_password, name=database),
+            files={file_field: ('s3_db.zip', file, 'application/zip')},
+            data=data,
         )
 
     # Ugly af, I know.
