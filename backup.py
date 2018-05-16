@@ -333,7 +333,7 @@ if __name__ == "__main__":
     parser.add_argument('--s3-path', env_var='S3_PATH', default='backup')
     parser.add_argument('--check-url', env_var='CHECK_URL', help="After every backup, send an HTTP GET request to this address. Designed with healthchecks.io in mind.")
     parser.add_argument('--restore-filename', env_var='RESTORE_FILENAME')
-    parser.add_argument('--protocol', env_var='PROTOCOL', default='xmlrpc', choices=('xmlprc', 'http'))
+    parser.add_argument('--protocol', env_var='PROTOCOL', default='xmlrpc', choices=('xmlrpc', 'http'))
 
     args = parser.parse_args()
 
