@@ -3,7 +3,7 @@ Authors:
  - Miku Laitinen / [Avoin.Systems](https://avoin.systems)
  - Atte Isopuro / [Avoin.Systems](https://avoin.systems)
 
-Backup Odoo databases (with filestore) to S3 and restore them upon request. Supported Odoo versions: 8, 9, 10, 11.
+Backup Odoo databases (with filestore) to S3 and restore them upon request. Supported Odoo versions: 8, 9, 10, 11, 12, 13.
 [![Docker Repository on Quay](https://quay.io/repository/avoinsystems/odoo-backup-restore-s3/status "Docker Repository on Quay")](https://quay.io/repository/avoinsystems/odoo-backup-restore-s3)
 
 ## Backup usage examples
@@ -54,7 +54,7 @@ Configuration options can be passed as environment variables.
 | `ODOO_HOST`             | Odoo container hostname   | `odoo`   |
 | `ODOO_PORT`             | Odoo container port       | `8069`   |
 | `ODOO_MASTER_PASSWORD`  | Odoo master password      | `admin`  |
-| `ODOO_VERSION`          | Odoo version number (8, 9, 10 or 11) | `11` |
+| `ODOO_VERSION`          | Odoo version number (8, 9, 10, 11, 12 or 13) | `13` |
 | `DATABASES`             | A single database or comma-separated list of databases   |   |
 | `AWS_ACCESS_KEY_ID`     | Amazon AWS Access Key ID  |          |
 | `AWS_SECRET_ACCESS_KEY` | Amazon AWS Secret Access Key |       |

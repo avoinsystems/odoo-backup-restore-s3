@@ -316,7 +316,7 @@ actions['restore_http'] = restore_http
 if __name__ == "__main__":
 
     env = os.environ
-    supported_versions = ('8', '9', '10', '11', '12')
+    supported_versions = ('8', '9', '10', '11', '12', '13')
 
     parser = configargparse.ArgParser()
     parser.add_argument('mode', default='backup', choices=('backup', 'restore'))

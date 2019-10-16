@@ -14,7 +14,7 @@ RUN apk update \
 ENV ODOO_HOST 'odoo'
 ENV ODOO_PORT '8069'
 ENV ODOO_MASTER_PASSWORD 'admin'
-ENV ODOO_VERSION '11'
+ENV ODOO_VERSION '13'
 
 # A comma separated list of databases to backup
 ENV DATABASES ''
