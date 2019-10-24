@@ -5,6 +5,7 @@ from datetime import datetime
 from xmlrpc import client
 
 import configargparse
+from tempfile import TemporaryFile
 import os
 import sys
 import time
@@ -125,19 +126,62 @@ def backup_http(s3, databases, odoo_host, odoo_port, odoo_master_password, odoo_
         response = requests.post(**request_args)
 
         if response.status_code >= 400:
-            raise Exception("Odoo returned error {} when trying to backup database {}.".format(
-                response.status_code,
-                database
-            ))
+            raise Exception("Odoo returned error {} when trying to "
+                            "backup database {}.".format(
+                                response.status_code,
+                                database
+                            ))
 
-        _logger.info(u"Successfully dumped database '{}'. Uploading to S3 ..."
-                     .format(database))
+        headers = response.headers
+        if 'Content-Type' in headers \
+                and 'application/octet-stream' not in headers['Content-Type']:
+            raise Exception(
+                "Received an invalid Content-Type form Odoo. This could be "
+                "caused by a non-existant database or insufficient rights. "
+                "Check the name of the database and the master password.")
 
-        # Upload the dump to S3
-        upload_path = s3_path + '/' + filename
-        s3.Bucket(s3_bucket).upload_fileobj(response.raw, Key=upload_path)
-        _logger.info(u"Upload to S3 finished. Database '{}' dump saved as {}"
+        _logger.info("Successfully dumped database '{}'. "
+                     "Saving to a temporary file ...".format(database))
+
+        with TemporaryFile() as file:
+
+            for chunk in response.iter_content(chunk_size=1024*12):
+                if chunk:
+                    file.write(chunk)
+
+            response.close()
+            file_size = file.tell()
+
+            if 'Content-Length' in headers \
+                    and file_size < int(headers['Content-Length']):
+                raise Exception(
+                    "Backup download was interrupted and the backup file is "
+                    "incomplete. This is most likely caused by too low Odoo "
+                    "timeout limits.")
+
+            file.seek(0)
+
+            _logger.info("Successfully saved '{}' to a temporary file. "
+                         "Uploading to S3 ...".format(database))
+
+            uploaded_bytes = 0
+
+            def update_uploaded_bytes(up_bytes, **kwargs):
+                nonlocal uploaded_bytes
+                uploaded_bytes += up_bytes
+
+            # Upload the dump to S3
+            upload_path = s3_path + '/' + filename
+            s3.Bucket(s3_bucket).upload_fileobj(file, Key=upload_path,
+                                                Callback=update_uploaded_bytes)
+
+            if uploaded_bytes < file_size:
+                raise Exception("Upload to S3 was interrupted and the backup "
+                                "file uploaded to S3 is incomplete.")
+
+        _logger.info("Upload to S3 finished. Database '{}' dump saved as {}"
                      .format(database, filename))
+
 
 actions['backup_http'] = backup_http
 

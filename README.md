@@ -10,7 +10,17 @@ Backup Odoo databases (with filestore) to S3 and restore them upon request. Supp
 
 Docker:
 ```sh
-$ docker run --link odoo --network=<odoo network> -e AWS_ACCESS_KEY_ID=<key> -e AWS_SECRET_ACCESS_KEY=<secret> -e S3_BUCKET=<my-bucket> -e S3_PREFIX=<backup> -e ODOO_MASTER_PASSWORD=<password> -e DATABASES=<comma-separated list of database names> -e SCHEDULE=<backup frequency> quay.io/avoinsystems/odoo-backup-restore-s3
+$ docker run \
+  --link odoo \
+  --network=<odoo network> \
+  -e AWS_ACCESS_KEY_ID=<key> \
+  -e AWS_SECRET_ACCESS_KEY=<secret> \
+  -e S3_BUCKET=<my-bucket> \
+  -e S3_PREFIX=<backup> \
+  -e ODOO_MASTER_PASSWORD=<password> \
+  -e DATABASES=<comma-separated list of database names> \
+  -e SCHEDULE=<backup frequency> \
+  quay.io/avoinsystems/odoo-backup-restore-s3
 ```
 
 Docker Compose:
@@ -37,7 +47,18 @@ backup:
 ## Restore usage examples
 Docker:
 ```sh
-$ docker run --link <odoo> --network=<odoo network> -e AWS_ACCESS_KEY_ID=<key> -e AWS_SECRET_ACCESS_KEY=<secret> -e S3_BUCKET=<my-bucket> -e S3_PREFIX=<backup> -e ODOO_MASTER_PASSWORD=<password> -e DATABASES=<database to be created from the backup> -e SCHEDULE=<backup frequency> quay.io/avoinsystems/odoo-backup-restore-s3 restore
+$ docker run \
+  --link <odoo> \
+  --network=<odoo network> \
+  -e AWS_ACCESS_KEY_ID=<key> \
+  -e AWS_SECRET_ACCESS_KEY=<secret> \
+  -e S3_BUCKET=<my-bucket> \
+  -e S3_PREFIX=<backup> \
+  -e ODOO_MASTER_PASSWORD=<password> \
+  -e DATABASES=<database to be created from the backup> \
+  -e SCHEDULE=<backup frequency> \
+  quay.io/avoinsystems/odoo-backup-restore-s3 \
+  restore
 ```
 
 Docker Compose:
@@ -65,3 +86,21 @@ Configuration options can be passed as environment variables.
 | `SCHEDULE`              | Backup frequency. `single` = backup only once. See all available options [here](http://godoc.org/github.com/robfig/cron#hdr-Predefined_schedules).  |`single`   |
 | `CHECK_URL`             | A URL to call with a GET request after a successful backup   |   |
 | `PROTOCOL`              | The protocol to use (`xmlrpc`, `http`). HTTP is more memory-efficient. | `xmlrpc` |
+
+## Reliability
+There are some issues with both XMLRPC and HTTP protocols.
+
+The XMLRPC method will store the backup in memory and if the database
+size exceeds the available free memory, the backup fails.
+
+The HTTP method calls the `/web/database/backup` endpoint of Odoo and
+stores the database backup temporarily on the disk before uploading it
+to S3. However, Odoo doesn't provide the size of the database dump in
+its HTTP headers, so if Odoo times out while the database dump is being
+downloaded, the incomplete database dump is uploaded to S3 without any
+sort of errors.
+
+If you want to get alerts of the Odoo timeouts and failed backups,
+consider installing the [`backup_size_header`](https://github.com/avoinsystems/avoinsystems-addons) module to your Odoo.
+It overrides the default backup method and adds the `Content-Length`
+header to the response.
